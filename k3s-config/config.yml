@@ -1,0 +1,6 @@
+kube-apiserver-arg:
+   - oidc-issuer-url=https://637b-50-47-138-250.ngrok-free.app/callback
+   - oidc-client-id=kubernetes
+   - oidc-username-claim=email
+   - oidc-groups-claim=groups
+

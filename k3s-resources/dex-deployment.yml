@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dex
+  namespace: dex
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dex
+  template:
+    metadata:
+      labels:
+        app: dex
+    spec:
+      containers:
+      - name: dex
+        image: ghcr.io/dexidp/dex:v2.36.0
+        command:
+        - /usr/local/bin/dex
+        args:
+        - serve
+        - /etc/dex/config.yaml
+        ports:
+        - containerPort: 5556
+        volumeMounts:
+        - name: config
+          mountPath: /etc/dex
+          readOnly: true
+      volumes:
+      - name: config
+        configMap:
+          name: dex
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dex
+  namespace: dex
+spec:
+  selector:
+    app: dex
+  ports:
+  - port: 5556
+    targetPort: 5556
+    nodePort: 30556
+  type: NodePort
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dex
+  namespace: dex
+data:
+  config.yaml: |
+    issuer: https://637b-50-47-138-250.ngrok-free.app
+    storage:
+      type: memory
+    web:
+      http: 0.0.0.0:5556
+    connectors:
+    - type: github
+      id: github
+      name: GitHub
+      config:
+        clientID: <YOUR CLIEND ID>
+        clientSecret: <YOUR CLIENT SECRET> 
+        redirectURI: <YOUR REDIRECT URI / callback>
+        scopes:
+        - user:email
+        userNameKey: email
+    staticClients:
+    - id: kubernetes
+      name: Kubernetes
+      redirectURIs:
+        - http://localhost:8000
+        - http://localhost:18000
+        - <YOUR REDIRECT URI / callback>  
+      secret: <YOUR CLIENT SECRET> 
